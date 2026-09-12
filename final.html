@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>V.A.U.L.T.</title>
+
+  <!-- Tailwind CSS & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #080b12;
+      --bg-panel: #111726;
+      --text-main: #f8fafc;
+      --text-muted: #8b93a6;
+      --text-faint: #5b6478;
+      --accent-cyan: #3ee6d8;
+      --accent-violet: #9a7bff;
+      --success-gain: #5ee69c;
+      --danger-loss: #ff6b7a;
+      --border-line: rgba(255, 255, 255, 0.09);
+
+      --cat-connectivity: #3ee6d8;
+      --cat-health: #ff9f5a;
+      --cat-education: #9a7bff;
+      --cat-lifestyle: #ffd166;
+      --cat-essentials: #5ee69c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(1100px 700px at 12% -10%, rgba(154, 123, 255, 0.14), transparent 60%),
+                  radial-gradient(900px 600px at 100% 10%, rgba(62, 230, 216, 0.10), transparent 55%),
+                  var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-line);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    /* TOP HEADER & NAVIGATION */
+    header {
+      background-color: rgba(8, 11, 18, 0.85);
+      border-bottom: 1px solid var(--border-line);
+      backdrop-filter: blur(20px);
+    }
+
+    nav button {
+      transition: all 0.2s ease;
+    }
+    nav button.active {
+      background: linear-gradient(135deg, rgba(62, 230, 216, 0.2), rgba(154, 123, 255, 0.2));
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(62, 230, 216, 0.15);
+    }
+
+    /* APP CONTAINER */
+    .app-container {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      padding: 20px 30px;
+      flex: 1;
+    }
+    @media (max-width: 1100px) {
+      .app-container { grid-template-columns: 1fr; }
+    }
+
+    .tab-section { display: none; flex-direction: column; gap: 20px; }
+    .tab-section.active-tab { display: flex; }
+
+    /* STATUS PILLS & BADGES */
+    .status-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .status-ok { background: rgba(94, 230, 156, 0.15); color: var(--success-gain); border: 1px solid rgba(94, 230, 156, 0.3); }
+    .status-err { background: rgba(255, 107, 122, 0.15); color: var(--danger-loss); border: 1px solid rgba(255, 107, 122, 0.3); }
+
+    /* RADAR ANIMATION */
+    .map-grid {
+      background-image: linear-gradient(rgba(154, 123, 255, 0.14) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(154, 123, 255, 0.14) 1px, transparent 1px);
+      background-size: 26px 26px;
+    }
+    @keyframes radarSweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .radar-sweep {
+      animation: radarSweep 4s linear infinite;
+      background: conic-gradient(from 0deg, rgba(62, 230, 216, 0.35), transparent 30%);
+    }
+    @keyframes pingSoft {
+      0% { transform: scale(0.6); opacity: .9; }
+      80% { transform: scale(2.6); opacity: 0; }
+      100% { transform: scale(2.6); opacity: 0; }
+    }
+    .ping-radar { animation: pingSoft 2.2s cubic-bezier(.3, .6, .4, 1) infinite; }
+
+    .factor-card {
+      transition: transform .22s ease, border-color .22s ease, background .22s ease;
+    }
+    .factor-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(62, 230, 216, 0.35);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .factor-hidden { display: none; }
+
+    .loc-chip {
+      border: 1px solid var(--border-line);
+      background: rgba(255, 255, 255, 0.03);
+      transition: all .2s ease;
+    }
+    .loc-chip.active {
+      border-color: rgba(62, 230, 216, 0.55);
+      background: linear-gradient(135deg, rgba(62, 230, 216, 0.14), rgba(154, 123, 255, 0.14));
+      box-shadow: 0 0 0 1px rgba(62, 230, 216, 0.15) inset;
+    }
+
+    .layer-chip {
+      border: 1px solid var(--border-line);
+      background: rgba(255, 255, 255, 0.03);
+      transition: all .2s ease;
+    }
+    .layer-chip[data-active="true"] {
+      border-color: var(--dot-color, var(--accent-cyan));
+      background: color-mix(in srgb, var(--dot-color, var(--accent-cyan)) 16%, transparent);
+    }
+    .layer-chip[data-active="false"] { opacity: .4; filter: grayscale(.5); }
+
+    .seg-bar {
+      height: 8px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .seg { height: 100%; transition: width .5s cubic-bezier(.2, .7, .2, 1); }
+
+    /* LEDGER STREAM */
+    .ledger-container {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-line);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      height: fit-content;
+      max-height: 85vh;
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; background: var(--success-gain);
+      border-radius: 50%; display: inline-block;
+      box-shadow: 0 0 8px var(--success-gain);
+    }
+    .log-item {
+      padding: 10px;
+      border-left: 3px solid var(--accent-cyan);
+      background: rgba(0, 0, 0, 0.3);
+      font-size: 11.5px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 8px;
+    }
+    .log-item.judicial { border-left-color: var(--danger-loss); }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg grid place-items-center bg-cyan-950/40 border border-cyan-500/30">
+        <i class="fa-solid fa-cube text-[var(--accent-cyan)] text-sm"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-display text-lg tracking-tight font-bold">V.A.U.L.T.</h1>
+        </div>
+        <p class="text-[11px] text-[var(--text-muted)] font-mono">Universal Conclusive Land Titling & Dynamic Valuation</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="status-badge status-ok text-xs"><i class="fa-solid fa-link mr-1"></i>HYPERLEDGER: MUTATION_NET</span>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="flex gap-3 px-6 py-3 border-b border-white/10 bg-black/40">
+    <button id="nav-citizen" class="active px-4 py-2 rounded-lg text-xs font-mono font-semibold glass-panel border border-white/10" onclick="switchTab('citizen')">
+      <i class="fa-solid fa-user-shield mr-1.5 text-[var(--accent-cyan)]"></i>1. Citizen Dashboard
+    </button>
+    <button id="nav-inspector" class="px-4 py-2 rounded-lg text-xs font-mono font-semibold glass-panel border border-white/10 text-[var(--text-muted)]" onclick="switchTab('inspector')">
+      <i class="fa-solid fa-gavel mr-1.5"></i>2. Inspector Console
+    </button>
+    <button id="nav-terravalue" class="px-4 py-2 rounded-lg text-xs font-mono font-semibold glass-panel border border-white/10 text-[var(--text-muted)]" onclick="switchTab('terravalue')">
+      <i class="fa-solid fa-chart-line mr-1.5 text-[var(--accent-violet)]"></i>3. LARR Engine
+    </button>
+  </nav>
+
+  <!-- MAIN DUAL-COLUMN LAYOUT -->
+  <div class="app-container">
+
+    <!-- LEFT COLUMN: TAB CONTENT -->
+    <div class="flex flex-col gap-6">
+
+      <!-- ======================================================================
+           TAB 1: CITIZEN DASHBOARD (AADHAAR INTEGRATED)
+      ====================================================================== -->
+      <section id="tab-citizen" class="tab-section active-tab">
+
+        <!-- AUTHENTICATION GATE -->
+        <div id="authGate" class="glass-panel rounded-2xl p-6 border border-cyan-500/30">
+          <div class="flex items-center gap-3 mb-2">
+            <i class="fa-solid fa-fingerprint text-[var(--accent-cyan)] text-lg"></i>
+            <h2 class="font-display text-base font-bold">Aadhaar Biometric Verification Gate</h2>
+          </div>
+          <p class="text-xs text-[var(--text-muted)] mb-4">
+            Authenticate via your registered biometric thumbprint or OTP session at a Common Service Centre (CSC) kiosk to decrypt your conclusive title portfolio.
+          </p>
+          <div class="max-w-md flex flex-col gap-3">
+            <div>
+              <label class="text-[11px] font-mono text-[var(--text-faint)] block mb-1">REGISTERED BIOMETRIC IDENTIFIER</label>
+              <input type="password" id="aadhaarInput" value="••••••••••••" placeholder="Enter Biometric ID" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-400" />
+            </div>
+            <button id="loginBtn" onclick="authenticateCitizen()" class="w-full py-2.5 rounded-xl font-medium text-xs tracking-tight text-black transition hover:brightness-110" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));">
+              <i class="fa-solid fa-lock-open mr-1.5"></i>Authenticate & Unlock Land Portfolio
+            </button>
+          </div>
+        </div>
+
+        <!-- REVEALED DASHBOARD -->
+        <div id="citizenPortfolio" class="hidden flex-col gap-6">
+
+          <div class="glass-panel rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <div>
+                <span class="text-[11px] font-mono text-[var(--text-faint)]">SELECTED PROPERTY RECORD</span>
+                <h2 id="portParcelId" class="font-display text-2xl font-bold text-[var(--accent-cyan)]">MH-PUN-041</h2>
+              </div>
+              <span id="portStatusBadge" class="status-badge status-ok">CONCLUSIVE_MUTATED_TITLE</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs mb-4">
+              <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-[var(--text-faint)] block">OWNER NAME</span>
+                <strong id="portOwner">Anand Deshmukh</strong>
+              </div>
+              <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-[var(--text-faint)] block">SURVEY AREA</span>
+                <strong id="portArea">12.14 ha (AIT Pune Campus)</strong>
+              </div>
+              <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-[var(--text-faint)] block">ENCUMBRANCES</span>
+                <strong class="text-[var(--success-gain)]">0 Liens Active</strong>
+              </div>
+              <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-[var(--text-faint)] block">IPFS MAP HASH</span>
+                <span class="text-[var(--accent-cyan)] text-[10px] truncate block">QmZ4tDuvesekSs4...</span>
+              </div>
+            </div>
+
+            <p class="text-xs text-[var(--text-muted)] leading-relaxed">
+              <strong>90-Day Finality Engine:</strong> Concluded with 0 verified judicial challenges. Title is state-guaranteed under conclusive titling framework.
+            </p>
+          </div>
+
+          <!-- LARR ACT (2013) NOTIFICATION IN DASHBOARD -->
+          <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-[var(--success-gain)]">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-display text-sm font-bold text-[var(--success-gain)]">
+                <i class="fa-solid fa-road mr-1.5"></i>Pune Ring Road Acquisition Notice (LARR Act, 2013)
+              </h3>
+              <span class="text-[11px] font-mono text-[var(--text-muted)]">STATUTORY 100% SOLATIUM APPLIED</span>
+            </div>
+            <p class="text-xs text-[var(--text-muted)] mb-4">
+              This parcel has been evaluated using our <strong>Terravalue Dynamic Pricing Engine</strong>. Market value is automatically paired with statutory 100% solatium compensation to eliminate clerk bribery.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
+              <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-[var(--text-faint)] block">AI BASE VALUE (PER HA)</span>
+                <span id="dashRatePerHa" class="text-base font-bold text-white">₹ 6,10,00,000</span>
+              </div>
+              <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                <span class="text-[10px] text-[var(--text-faint)] block">100% MANDATORY SOLATIUM</span>
+                <span id="dashSolatiumAmount" class="text-base font-bold text-[var(--accent-violet)]">₹ 6,10,00,000</span>
+              </div>
+              <div class="bg-emerald-950/30 p-3 rounded-xl border border-emerald-500/30">
+                <span class="text-[10px] text-[var(--success-gain)] block font-bold">TOTAL DISBURSAL / HECTARE</span>
+                <span id="dashTotalPayout" class="text-lg font-bold text-[var(--success-gain)]">₹ 12,20,00,000</span>
+              </div>
+            </div>
+
+            <button class="mt-4 px-4 py-2 rounded-xl text-xs font-semibold text-black bg-[var(--success-gain)] hover:brightness-110 transition">
+              <i class="fa-solid fa-signature mr-1.5"></i>Accept Direct Smart Contract Bank Disbursal
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ======================================================================
+           TAB 2: GOVERNMENT INSPECTOR CONSOLE
+      ====================================================================== -->
+      <section id="tab-inspector" class="tab-section">
+        <!-- MULTI-SIG ORACLE -->
+        <div class="glass-panel rounded-2xl p-6">
+          <h2 class="font-display text-base font-bold mb-1">Multi-Sig Mutation Gateway (GIGO Mitigation)</h2>
+          <p class="text-xs text-[var(--text-muted)] mb-4">
+            Prevents corrupt database alterations by requiring concurrent cryptographic approvals from local revenue authorities.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-[11px] font-mono text-[var(--text-faint)] block mb-1">TARGET PARCEL NUMBER</label>
+              <input id="mutParcelInput" type="text" placeholder="e.g., MH-PUN-089" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono" />
+            </div>
+            <div>
+              <label class="text-[11px] font-mono text-[var(--text-faint)] block mb-1">PROPOSED BUYER NAME</label>
+              <input id="mutBuyerInput" type="text" placeholder="Legal full name" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono" />
+            </div>
+            <div>
+              <label class="text-[11px] font-mono text-[var(--text-faint)] block mb-1">PATWARI DIGITAL TOKEN (DSC)</label>
+              <select id="patwariSelect" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono">
+                <option value="verified">Verified [Patwari-Token-781]</option>
+                <option value="missing">Missing / Rejected</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] font-mono text-[var(--text-faint)] block mb-1">SARPANCH CSC BIOMETRIC SIGN</label>
+              <select id="sarpanchSelect" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono">
+                <option value="verified">Verified [Biometric-Session-OK]</option>
+                <option value="missing">Missing / Rejected</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="executeMutation()" class="mt-4 px-4 py-2.5 rounded-xl font-medium text-xs text-black bg-[var(--accent-cyan)] hover:brightness-110 transition">
+            <i class="fa-solid fa-signature mr-1.5"></i>Commit Mutation Proposal to Ledger
+          </button>
+        </div>
+
+        <!-- JUDICIAL AMENDMENT BLOCK -->
+        <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-[var(--danger-loss)]">
+          <h2 class="font-display text-base font-bold text-[var(--danger-loss)] mb-1">Judicial Amendment Block (Court Reversal Engine)</h2>
+          <p class="text-xs text-[var(--text-muted)] mb-4">
+            Blockchains cannot be deleted. If a High Court voids a deed, an authorized judge appends a new state block that supersedes fraudulent ownership while keeping the audit trail intact.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input id="writInput" type="text" placeholder="e.g., BOM-HC-PIL-2026-904" class="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono" />
+            <button onclick="executeJudicialOverride()" class="px-4 py-2.5 rounded-xl font-medium text-xs text-white bg-[var(--danger-loss)] hover:brightness-110 transition shrink-0">
+              <i class="fa-solid fa-gavel mr-1.5"></i>Execute Judicial Override Block
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================================
+           TAB 3: TERRAVALUE AI ORACLE & LARR ENGINE (INTEGRATED)
+      ====================================================================== -->
+      <section id="tab-terravalue" class="tab-section">
+
+        <!-- LARR INTEGRATION BANNER -->
+        <div class="glass-panel rounded-2xl p-4 border border-violet-500/30 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 class="font-display text-sm font-bold text-[var(--accent-violet)]">
+              <i class="fa-solid fa-brain mr-1.5"></i>Terravalue × LARR Act (2013) Dynamic Compensation Pipeline
+            </h2>
+            <p class="text-xs text-[var(--text-muted)] mt-0.5">
+              21 spatial indicators weigh infrastructure proximity. The resulting rate feeds directly into statutory solatium payouts.
+            </p>
+          </div>
+          <button onclick="syncTerravalueToDashboard()" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-violet-600/30 border border-violet-400 text-white hover:bg-violet-600/50 transition">
+            <i class="fa-solid fa-arrows-rotate mr-1"></i>Sync Valuation to Citizen Dashboard
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-6">
+
+          <!-- LEFT SUB-COLUMN: MAP & CALCULATOR -->
+          <div class="flex flex-col gap-6">
+
+            <!-- SEED LOCATIONS -->
+            <div class="glass-panel rounded-2xl p-4">
+              <label class="text-[11px] font-mono text-[var(--text-faint)] block mb-2.5">SEED LOCATIONS — TAP TO SWITCH</label>
+              <div id="locationChips" class="grid grid-cols-2 gap-2"></div>
+
+              <div class="mt-4">
+                <label class="text-[11px] font-mono text-[var(--text-faint)] block mb-2">CUSTOM LOCATION</label>
+                <div class="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 focus-within:border-[var(--accent-cyan)]/50 transition">
+                  <i class="fa-solid fa-location-crosshairs text-[var(--accent-cyan)] text-sm"></i>
+                  <input id="locationInput" type="text" class="bg-transparent text-[13px] w-full text-white placeholder:text-[var(--text-faint)] focus:outline-none" />
+                </div>
+                <button id="estimateBtn" class="w-full mt-2.5 rounded-xl py-2.5 text-xs font-medium tracking-tight text-black transition hover:brightness-110" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));">
+                  <i class="fa-solid fa-bolt mr-1.5"></i>Re-run Spatial Valuation
+                </button>
+              </div>
+            </div>
+
+            <!-- RADAR MAP -->
+            <div class="glass-panel rounded-2xl overflow-hidden relative h-[240px]">
+              <div class="absolute inset-0 map-grid opacity-60"></div>
+              <div class="absolute inset-0 grid place-items-center">
+                <div id="radarWrap" class="relative w-44 h-44 rounded-full">
+                  <div class="absolute inset-0 rounded-full radar-sweep"></div>
+                  <div class="absolute inset-3 rounded-full border border-cyan-400/20"></div>
+                  <div class="absolute inset-9 rounded-full border border-cyan-400/15"></div>
+                  <div class="absolute inset-16 rounded-full border border-cyan-400/10"></div>
+                  <svg id="layerSvg" viewBox="0 0 192 192" class="absolute inset-0 w-full h-full overflow-visible"></svg>
+                  <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <span class="absolute inset-0 rounded-full bg-cyan-400/40 ping-radar"></span>
+                    <span class="relative block w-3 h-3 rounded-full bg-[var(--accent-cyan)]" style="box-shadow:0 0 14px 3px rgba(62,230,216,0.7);"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                <span id="mapLabel" class="text-[11px] font-mono px-2 py-1 rounded glass-panel text-[var(--text-muted)]"></span>
+                <span class="text-[11px] font-mono px-2 py-1 rounded glass-panel text-[var(--accent-cyan)]">LIVE SCAN</span>
+              </div>
+            </div>
+
+            <!-- ESTIMATED VALUE & BAR -->
+            <div class="glass-panel rounded-2xl p-6">
+              <p class="text-[11px] font-mono text-[var(--text-faint)] tracking-wide">AI DYNAMIC LOCATION RATE (PER HA)</p>
+              <h1 id="grandTotal" class="font-display text-[36px] leading-none tracking-tight font-bold mt-2" style="color:var(--accent-cyan);">₹ 0</h1>
+              <div class="mt-3 flex items-center gap-2 text-xs font-mono">
+                <span class="text-[var(--text-faint)]">Base ₹ 50,00,000</span>
+                <span class="text-[var(--text-faint)]">+</span>
+                <span id="deltaTotal" class="text-[var(--success-gain)]">₹ 0 net signal</span>
+              </div>
+
+              <div class="mt-4 pt-4 border-t border-white/10">
+                <p class="text-[11px] font-mono text-[var(--text-faint)] mb-2">VALUE COMPOSITION BY LAYER</p>
+                <div id="segBar" class="seg-bar"></div>
+                <div id="segLegend" class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[10.5px] font-mono"></div>
+              </div>
+            </div>
+
+            <!-- PARCEL & LARR MULTIPLIER -->
+            <div class="glass-panel rounded-2xl p-6 border-l-2 border-l-[var(--accent-violet)]">
+              <p class="text-[11px] font-mono text-[var(--text-faint)]">LARR ACQUISITION TOTAL</p>
+              <div class="flex items-center justify-between mt-2">
+                <div>
+                  <span class="text-[10px] text-[var(--text-faint)] font-mono block">PARCEL SIZE</span>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <input id="landAreaInput" type="number" min="0.01" step="0.01" class="w-20 bg-black/40 border border-white/10 rounded px-2 py-1 text-sm font-mono text-right focus:outline-none focus:border-cyan-400" />
+                    <span class="text-xs text-[var(--text-muted)] font-mono">ha</span>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-[var(--text-faint)] font-mono block">BASE VALUE</span>
+                  <p id="landTotalValue" class="font-display text-lg font-bold text-white mt-0.5">₹ 0</p>
+                </div>
+              </div>
+
+              <div class="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+                <span class="text-xs font-mono text-[var(--success-gain)] font-bold">+ 100% Solatium (Double Payout):</span>
+                <span id="larrTotalWithSolatium" class="text-lg font-mono font-bold text-[var(--success-gain)]">₹ 0</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT SUB-COLUMN: 21 INFRASTRUCTURE FACTORS -->
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between px-1 flex-wrap gap-2">
+              <div>
+                <h2 class="font-display text-base font-bold">Infrastructure Proximity Ledger</h2>
+                <p class="text-xs text-[var(--text-muted)]">21 verified spatial variables affecting fair market pricing.</p>
+              </div>
+              <div id="layerChips" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <div id="factorGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[750px] overflow-y-auto pr-1 pb-2"></div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR: LIVE POLYGON EDGE BLOCKCHAIN STREAM -->
+    <aside class="ledger-container p-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="pulse-dot"></span>
+          <span class="text-xs font-mono font-bold text-[var(--accent-cyan)]">Polygon Edge Stream</span>
+        </div>
+        <span class="text-[10px] font-mono text-[var(--text-faint)]">Read Cache</span>
+      </div>
+      <div id="logStream" class="flex flex-col overflow-y-auto pr-1 max-h-[75vh]">
+        <!-- Injected via JS -->
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ALL JAVASCRIPT LOGIC -->
+  <script>
+    /* ======================================================================
+       1. NAVIGATION & TAB SWITCHING
+    ====================================================================== */
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active-tab'));
+      document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+
+      document.getElementById('tab-' + tabId).classList.add('active-tab');
+      document.getElementById('nav-' + tabId).classList.add('active');
+    }
+
+    /* ======================================================================
+       2. CITIZEN DASHBOARD & AADHAAR AUTHENTICATION
+    ====================================================================== */
+    function authenticateCitizen() {
+      const btn = document.getElementById('loginBtn');
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Validating Biometric Session...`;
+
+      setTimeout(() => {
+        document.getElementById('authGate').classList.add('hidden');
+        document.getElementById('citizenPortfolio').classList.remove('hidden');
+        document.getElementById('citizenPortfolio').classList.add('flex');
+        addLedgerLog("AUTH", "Citizen Biometric DID successfully verified at CSC node.");
+      }, 500);
+    }
+
+    /* ======================================================================
+       3. INSPECTOR CONSOLE (MUTATION & JUDICIAL OVERRIDE)
+    ====================================================================== */
+    function executeMutation() {
+      const parcel = document.getElementById('mutParcelInput').value || "MH-PUN-NEW";
+      const patwari = document.getElementById('patwariSelect').value;
+      const sarpanch = document.getElementById('sarpanchSelect').value;
+
+      if (patwari === "missing" || sarpanch === "missing") {
+        alert("TRANSACTION REJECTED: Multi-Sig requirement failed. Both Patwari and Sarpanch digital signatures are mandatory to prevent GIGO fraud.");
+        addLedgerLog("MULTI_SIG_FAIL", `Mutation rejected on parcel ${parcel}. Missing cryptographic keys.`);
+        return;
+      }
+
+      alert(`SUCCESS: Transfer registered for ${parcel}. 90-Day Finality Engine countdown initiated.`);
+      addLedgerLog("MUTATION", `Block appended for ${parcel}. Provisional challenge window open for 90 days.`);
+      document.getElementById('mutParcelInput').value = "";
+      document.getElementById('mutBuyerInput').value = "";
+    }
+
+    function executeJudicialOverride() {
+      const writ = document.getElementById('writInput').value;
+      if (!writ) {
+        alert("Please enter a verified eCourts writ identifier.");
+        return;
+      }
+
+      alert(`JUDICIAL AMENDMENT BLOCK APPENDED: High Court writ ${writ} executed. Ownership lawfully restored while preserving audit trail.`);
+      addLedgerLog("JUDICIAL_WRIT", `Writ ${writ} verified. Superseding state block appended. Historical logs preserved.`, true);
+      document.getElementById('writInput').value = "";
+    }
+
+    /* ======================================================================
+       4. LIVE LEDGER STREAM GENERATOR
+    ====================================================================== */
+    let blockHeight = 104590;
+    function addLedgerLog(type, message, isJudicial = false) {
+      blockHeight++;
+      const stream = document.getElementById('logStream');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = isJudicial ? 'log-item judicial' : 'log-item';
+      div.innerHTML = `
+        <div class="flex justify-between font-mono text-[10px] text-[var(--text-faint)] mb-1">
+          <span>#${blockHeight} [${type}]</span>
+          <span>${time}</span>
+        </div>
+        <div class="text-[11.5px] leading-tight">${message}</div>
+      `;
+      stream.prepend(div);
+    }
+
+    setInterval(() => {
+      const msgs = [
+        "PostGIS spatial check: Boundary overlap verified at 0.00%.",
+        "IPFS CID Hash verified for Pune District cadastral raster map.",
+        "Polygon Edge node query served to Sub-Registrar cache.",
+        "Chainlink Oracle heartbeat: eCourts dispute API connected."
+      ];
+      addLedgerLog("SYS_ORACLE", msgs[Math.floor(Math.random() * msgs.length)]);
+    }, 9000);
+
+    /* ======================================================================
+       5. TERRAVALUE DYNAMIC PRICING ENGINE
+    ====================================================================== */
+    const BASE_PRICE = 5000000; // ₹ 50,00,000
+
+    const CATEGORIES = {
+      connectivity: { label: "Connectivity", color: "var(--cat-connectivity)" },
+      health: { label: "Health & Safety", color: "var(--cat-health)" },
+      education: { label: "Education & Work", color: "var(--cat-education)" },
+      lifestyle: { label: "Shopping & Lifestyle", color: "var(--cat-lifestyle)" },
+      essentials: { label: "Daily Essentials", color: "var(--cat-essentials)" },
+    };
+
+    function bracket(distanceKm, brackets, beyond = 0) {
+      for (const b of brackets) {
+        if (distanceKm <= b.upto) return b.value;
+      }
+      return beyond;
+    }
+
+    const FACTORS = [
+      { key: "airport", name: "International Airport", icon: "fa-plane-departure", category: "connectivity", pricing: d => bracket(d, [{ upto: 2, value: 500000 }, { upto: 5, value: 200000 }, { upto: 10, value: 50050 }], -100000) },
+      { key: "railway", name: "Major Railway Station", icon: "fa-train-subway", category: "connectivity", pricing: d => bracket(d, [{ upto: 1, value: 300000 }, { upto: 3, value: 180000 }, { upto: 6, value: 80000 }], 0) },
+      { key: "bus", name: "Interstate Bus Terminal", icon: "fa-bus", category: "connectivity", pricing: d => bracket(d, [{ upto: 2, value: 150000 }, { upto: 5, value: 80000 }, { upto: 10, value: 20000 }], 0) },
+      { key: "highway", name: "National/State Highway", icon: "fa-road", category: "connectivity", pricing: d => bracket(d, [{ upto: 1, value: 300000 }, { upto: 3, value: 100000 }], -50000) },
+      { key: "metro", name: "Metro Station", icon: "fa-train", category: "connectivity", pricing: d => bracket(d, [{ upto: 1, value: 400000 }, { upto: 3, value: 200000 }, { upto: 6, value: 60000 }], 0) },
+      { key: "hospital", name: "Multispecialty Hospital", icon: "fa-hospital", category: "health", pricing: d => bracket(d, [{ upto: 2, value: 250000 }, { upto: 5, value: 100000 }], -150000) },
+      { key: "police", name: "Police Station", icon: "fa-shield-halved", category: "health", pricing: d => bracket(d, [{ upto: 1, value: 100000 }, { upto: 3, value: 50000 }], -80000) },
+      { key: "fire", name: "Fire Station", icon: "fa-fire-flame-curved", category: "health", pricing: d => bracket(d, [{ upto: 2, value: 100000 }, { upto: 5, value: 40000 }], -60000) },
+      { key: "pharmacy", name: "24/7 Pharmacy", icon: "fa-suitcase-medical", category: "health", pricing: d => bracket(d, [{ upto: 1, value: 80000 }, { upto: 3, value: 30000 }], 0) },
+      { key: "school", name: "Reputed School", icon: "fa-graduation-cap", category: "education", pricing: d => bracket(d, [{ upto: 1, value: 200000 }, { upto: 3, value: 100000 }, { upto: 5, value: 30000 }], 0) },
+      { key: "college", name: "Engineering/Degree College", icon: "fa-user-graduate", category: "education", pricing: d => bracket(d, [{ upto: 2, value: 100000 }, { upto: 5, value: 50000 }], 0) },
+      { key: "itpark", name: "IT Park / Corporate Hub", icon: "fa-building", category: "education", pricing: d => bracket(d, [{ upto: 3, value: 400000 }, { upto: 7, value: 220000 }, { upto: 12, value: 80000 }], 0) },
+      { key: "mall", name: "Shopping Mall", icon: "fa-bag-shopping", category: "lifestyle", pricing: d => bracket(d, [{ upto: 2, value: 250000 }, { upto: 5, value: 120000 }, { upto: 8, value: 40000 }], 0) },
+      { key: "restaurant", name: "Fine Dining Restaurant", icon: "fa-utensils", category: "lifestyle", pricing: d => bracket(d, [{ upto: 1, value: 90000 }, { upto: 3, value: 45000 }, { upto: 5, value: 15000 }], 0) },
+      { key: "cinema", name: "Cinema/Multiplex", icon: "fa-film", category: "lifestyle", pricing: d => bracket(d, [{ upto: 2, value: 120000 }, { upto: 5, value: 60000 }, { upto: 8, value: 20000 }], 0) },
+      { key: "gym", name: "Gym/Fitness Center", icon: "fa-dumbbell", category: "lifestyle", pricing: d => bracket(d, [{ upto: 1, value: 60000 }, { upto: 3, value: 25000 }], 0) },
+      { key: "supermarket", name: "Supermarket/Grocery Store", icon: "fa-cart-shopping", category: "lifestyle", pricing: d => bracket(d, [{ upto: 1, value: 100000 }, { upto: 2, value: 60000 }, { upto: 4, value: 20000 }], 0) },
+      { key: "park", name: "Public Park/Recreation", icon: "fa-tree", category: "essentials", pricing: d => bracket(d, [{ upto: 1, value: 150000 }, { upto: 3, value: 80000 }, { upto: 5, value: 30000 }], 0) },
+      { key: "bank", name: "Bank Branch", icon: "fa-building-columns", category: "essentials", pricing: d => bracket(d, [{ upto: 1, value: 70000 }, { upto: 3, value: 30000 }], 0) },
+      { key: "atm", name: "ATM", icon: "fa-credit-card", category: "essentials", pricing: d => bracket(d, [{ upto: 0.5, value: 40000 }, { upto: 1.5, value: 15000 }], 0) },
+      { key: "petrol", name: "Petrol Pump / EV Station", icon: "fa-gas-pump", category: "essentials", pricing: d => bracket(d, [{ upto: 1, value: 50000 }, { upto: 2, value: 20000 }], 0) },
+    ];
+
+    const LOCATIONS = {
+      ait: {
+        label: "AIT Pune", short: "AIT",
+        full: "AIT Pune, Army Institute of Technology, Alandi Road, Pune",
+        coords: "18.599°N, 73.858°E", landAreaHectares: 12.14,
+        data: { airport:{d:9.4,near:"Pune Airport"}, railway:{d:4.8,near:"Dapodi Station"}, bus:{d:9.6,near:"Shivajinagar ST"}, highway:{d:0.8,near:"Old Pune-Mumbai Hwy"}, metro:{d:5.5,near:"Dapodi Metro"}, hospital:{d:3.2,near:"Command Hospital"}, police:{d:1.2,near:"Dighi Police Station"}, fire:{d:5.0,near:"Pimpri Fire Station"}, pharmacy:{d:0.9,near:"Apollo Pharmacy"}, school:{d:2.1,near:"Podar International"}, college:{d:4.0,near:"PICT Pune"}, itpark:{d:7.5,near:"EON IT Park"}, mall:{d:6.8,near:"Xion Mall"}, restaurant:{d:3.5,near:"Malaka Spice"}, cinema:{d:6.2,near:"INOX Phoenix"}, gym:{d:1.1,near:"Cult.fit Alandi Rd"}, supermarket:{d:1.5,near:"DMart Dighi"}, park:{d:4.2,near:"Riverside Garden"}, bank:{d:0.7,near:"HDFC Bank"}, atm:{d:0.3,near:"SBI ATM"}, petrol:{d:0.6,near:"HP Petrol+EV Point"} }
+      },
+      phoenix: {
+        label: "Phoenix Mall", short: "Phoenix",
+        full: "Phoenix Marketcity, Viman Nagar, Pune",
+        coords: "18.562°N, 73.917°E", landAreaHectares: 2.75,
+        data: { airport:{d:3.1,near:"Pune Airport"}, railway:{d:6.5,near:"Pune Junction"}, bus:{d:7.8,near:"Viman Nagar Depot"}, highway:{d:1.6,near:"Nagar Road"}, metro:{d:4.0,near:"Ramwadi Metro"}, hospital:{d:1.4,near:"Sahyadri Hospital"}, police:{d:1.8,near:"Viman Nagar Chowky"}, fire:{d:4.4,near:"Viman Nagar Post"}, pharmacy:{d:0.3,near:"Apollo Pharmacy"}, school:{d:1.0,near:"Vibgyor High"}, college:{d:5.2,near:"MIT World Peace"}, itpark:{d:2.8,near:"EON IT Park"}, mall:{d:0.1,near:"Phoenix Mall"}, restaurant:{d:0.2,near:"Phoenix Food Court"}, cinema:{d:0.15,near:"PVR INOX"}, gym:{d:0.5,near:"Gold's Gym"}, supermarket:{d:0.4,near:"DMart"}, park:{d:2.3,near:"Viman Garden"}, bank:{d:0.3,near:"ICICI Bank"}, atm:{d:0.1,near:"Axis ATM"}, petrol:{d:1.0,near:"IOCL EV Point"} }
+      },
+      koppa: {
+        label: "KOPA Mall", short: "KOPA",
+        full: "KOPA Mall, Koregaon Park, Mundhwa Road, Pune",
+        coords: "18.536°N, 73.894°E", landAreaHectares: 1.01,
+        data: { airport:{d:7.6,near:"Pune Airport"}, railway:{d:4.0,near:"Pune Junction"}, bus:{d:5.5,near:"Swargate ST"}, highway:{d:1.0,near:"Solapur Road"}, metro:{d:2.5,near:"Ramwadi Metro"}, hospital:{d:1.5,near:"Ruby Hall Clinic"}, police:{d:0.8,near:"Koregaon Police"}, fire:{d:2.6,near:"Yerawada Fire Post"}, pharmacy:{d:0.4,near:"Apollo Pharmacy"}, school:{d:1.2,near:"The Bishop's School"}, college:{d:3.0,near:"Fergusson College"}, itpark:{d:2.0,near:"Amar Business Park"}, mall:{d:0.1,near:"KOPA Mall"}, restaurant:{d:0.2,near:"North Main Rd Dining"}, cinema:{d:0.1,near:"PVR Director's Cut"}, gym:{d:0.3,near:"Gold's Gym KP"}, supermarket:{d:0.5,near:"Sundara Supermarket"}, park:{d:0.6,near:"Riverside Garden"}, bank:{d:0.4,near:"HDFC Bank"}, atm:{d:0.1,near:"Axis ATM"}, petrol:{d:0.7,near:"HP Pump Mundhwa"} }
+      },
+      dighi: {
+        label: "Dighi", short: "Dighi",
+        full: "Dighi, Pune",
+        coords: "18.615°N, 73.850°E", landAreaHectares: 2.1,
+        data: { airport:{d:10.8,near:"Pune Airport"}, railway:{d:5.6,near:"Dapodi Station"}, bus:{d:8.9,near:"Bhosari Depot"}, highway:{d:0.6,near:"Pune-Nashik Hwy"}, metro:{d:6.1,near:"Dapodi Metro"}, hospital:{d:3.9,near:"Command Hospital"}, police:{d:0.8,near:"Dighi Police"}, fire:{d:4.6,near:"Pimpri Fire Station"}, pharmacy:{d:0.7,near:"Apollo Pharmacy"}, school:{d:1.7,near:"Podar International"}, college:{d:3.6,near:"PICT Pune"}, itpark:{d:6.9,near:"EON IT Park"}, mall:{d:5.5,near:"Xion Mall"}, restaurant:{d:2.6,near:"Malaka Spice"}, cinema:{d:5.0,near:"INOX Phoenix"}, gym:{d:1.4,near:"Cult.fit"}, supermarket:{d:0.9,near:"Reliance Fresh"}, park:{d:3.0,near:"Dighi Riverside Park"}, bank:{d:0.5,near:"HDFC Dighi"}, atm:{d:0.2,near:"SBI ATM"}, petrol:{d:0.4,near:"BPCL Pump Dighi"} }
+      }
+    };
+
+    let currentLocationId = "ait";
+    let activeLayers = new Set(Object.keys(CATEGORIES));
+    let currentCalculatedRate = BASE_PRICE;
+
+    function formatINR(amount) {
+      const sign = amount < 0 ? "-" : "";
+      const n = Math.abs(Math.round(amount));
+      const str = n.toString();
+      let last3 = str.substring(str.length - 3);
+      const other = str.substring(0, str.length - 3);
+      if (other !== "") last3 = "," + last3;
+      const formattedOther = other.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+      return `${sign}₹ ${formattedOther}${last3}`;
+    }
+
+    function formatSignedINR(amount) {
+      const prefix = amount > 0 ? "+" : amount < 0 ? "−" : "";
+      return `${prefix} ${formatINR(Math.abs(amount)).replace("₹ ", "₹")}`;
+    }
+
+    function renderLocationChips() {
+      const wrap = document.getElementById("locationChips");
+      wrap.innerHTML = Object.entries(LOCATIONS).map(([id, loc]) => `
+        <button data-loc="${id}" class="loc-chip ${id === currentLocationId ? 'active' : ''} rounded-xl px-3 py-2 text-left">
+          <p class="text-[12px] font-medium leading-tight">${loc.label}</p>
+          <p class="text-[10px] text-[var(--text-faint)] font-mono mt-0.5">${loc.coords}</p>
+        </button>
+      `).join("");
+
+      wrap.querySelectorAll("[data-loc]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          currentLocationId = btn.dataset.loc;
+          document.getElementById("locationInput").value = LOCATIONS[currentLocationId].full;
+          renderLocationChips();
+          runEstimate();
+        });
+      });
+    }
+
+    function renderLayerChips() {
+      const wrap = document.getElementById("layerChips");
+      wrap.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
+        <button data-layer="${key}" data-active="${activeLayers.has(key)}" style="--dot-color:${cat.color}"
+          class="layer-chip rounded-full px-2.5 py-1 text-[11px] font-mono flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full" style="background:${cat.color}"></span>${cat.label}
+        </button>
+      `).join("");
+
+      wrap.querySelectorAll("[data-layer]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.dataset.layer;
+          if (activeLayers.has(key)) activeLayers.delete(key); else activeLayers.add(key);
+          renderLayerChips();
+          applyLayerFilter();
+          renderRadarDots();
+        });
+      });
+    }
+
+    function renderRadarDots() {
+      const svg = document.getElementById("layerSvg");
+      const cx = 88, cy = 88, maxR = 76;
+      const loc = LOCATIONS[currentLocationId];
+      const n = FACTORS.length;
+
+      svg.innerHTML = FACTORS.map((f, i) => {
+        const distance = loc.data[f.key].d;
+        const scaled = Math.min(1, Math.sqrt(distance) / Math.sqrt(20));
+        const r = 12 + scaled * (maxR - 12);
+        const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        const cssVarName = CATEGORIES[f.category].color;
+        const visible = activeLayers.has(f.category);
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${cssVarName}" opacity="${visible ? 0.9 : 0}" />`;
+      }).join("");
+    }
+
+    function applyLayerFilter() {
+      document.querySelectorAll("[data-card-category]").forEach(card => {
+        const cat = card.dataset.cardCategory;
+        card.classList.toggle("factor-hidden", !activeLayers.has(cat));
+      });
+    }
+
+    function renderFactorCard(factor, distance, nearest) {
+      const value = factor.pricing(distance);
+      const isFlat = value === 0;
+      const catColor = CATEGORIES[factor.category].color;
+      const color = isFlat ? "var(--text-faint)" : (value > 0 ? "var(--success-gain)" : "var(--danger-loss)");
+      const barPct = Math.min(100, Math.round((Math.abs(value) / 500000) * 100));
+
+      return `
+        <div class="factor-card glass-panel rounded-xl p-3.5" data-card-category="${factor.category}" style="border-left:2.5px solid ${catColor}">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 shrink-0 rounded-lg grid place-items-center border border-white/10 bg-white/[0.03]">
+                <i class="fa-solid ${factor.icon} text-xs" style="color:${catColor}"></i>
+              </div>
+              <div class="min-w-0">
+                <p class="text-[12.5px] font-medium leading-tight truncate">${factor.name}</p>
+                <p class="text-[10px] text-[var(--text-faint)] truncate mt-0.5">${nearest}</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="font-mono text-xs font-semibold" style="color:${color}">${formatSignedINR(value)}</p>
+              <p class="text-[10px] text-[var(--text-faint)] font-mono mt-0.5">${distance.toFixed(1)} km</p>
+            </div>
+          </div>
+          <div class="mt-2.5 h-1 rounded-full bg-white/10 overflow-hidden">
+            <div class="h-full rounded-full" style="width:${barPct}%; background:${color};"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSegBar(categoryTotals) {
+      const segBar = document.getElementById("segBar");
+      const legend = document.getElementById("segLegend");
+      const totalAbs = Object.values(categoryTotals).reduce((s, v) => s + Math.abs(v), 0) || 1;
+
+      segBar.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => {
+        const pct = (Math.abs(categoryTotals[key]) / totalAbs) * 100;
+        return `<div class="seg" style="width:${pct}%; background:${cat.color};" title="${cat.label}"></div>`;
+      }).join("");
+
+      legend.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => {
+        const v = categoryTotals[key];
+        const sign = v > 0 ? "text-[var(--success-gain)]" : v < 0 ? "text-[var(--danger-loss)]" : "text-[var(--text-faint)]";
+        return `
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:${cat.color}"></span>
+            <span class="text-[var(--text-muted)] truncate">${cat.label}</span>
+            <span class="${sign} ml-auto shrink-0 font-semibold">${formatSignedINR(v)}</span>
+          </div>`;
+      }).join("");
+    }
+
+    function computeLandValue() {
+      const input = document.getElementById("landAreaInput");
+      const hectares = Math.max(0, parseFloat(input.value) || 0);
+      const totalBaseLandValue = currentCalculatedRate * hectares;
+      const totalLarrWithSolatium = totalBaseLandValue * 2; // 100% Solatium rule
+
+      document.getElementById("landTotalValue").textContent = formatINR(totalBaseLandValue);
+      document.getElementById("larrTotalWithSolatium").textContent = formatINR(totalLarrWithSolatium);
+    }
+
+    function runEstimate() {
+      const loc = LOCATIONS[currentLocationId];
+      document.getElementById("mapLabel").textContent = loc.coords;
+      if (!document.getElementById("locationInput").value) {
+        document.getElementById("locationInput").value = loc.full;
+      }
+
+      const grid = document.getElementById("factorGrid");
+      grid.innerHTML = FACTORS.map(f => {
+        const { d, near } = loc.data[f.key];
+        return renderFactorCard(f, d, near);
+      }).join("");
+
+      let delta = 0;
+      const categoryTotals = Object.fromEntries(Object.keys(CATEGORIES).map(k => [k, 0]));
+
+      FACTORS.forEach(f => {
+        const v = f.pricing(loc.data[f.key].d);
+        delta += v;
+        categoryTotals[f.category] += v;
+      });
+
+      const total = BASE_PRICE + delta;
+      currentCalculatedRate = total;
+
+      document.getElementById("grandTotal").textContent = formatINR(total);
+      const deltaEl = document.getElementById("deltaTotal");
+      deltaEl.textContent = `${formatSignedINR(delta)} net signal`;
+      deltaEl.style.color = delta >= 0 ? "var(--success-gain)" : "var(--danger-loss)";
+
+      renderSegBar(categoryTotals);
+      renderRadarDots();
+      applyLayerFilter();
+
+      document.getElementById("landAreaInput").value = loc.landAreaHectares;
+      computeLandValue();
+      addLedgerLog("ORACLE_VALUATION", `Terravalue spatial valuation calculated for ${loc.label}: ${formatINR(total)}/ha.`);
+    }
+
+    // Direct synchronization between Terravalue and the Farmer's Dashboard (Tab 1)
+    function syncTerravalueToDashboard() {
+      document.getElementById("dashRatePerHa").textContent = formatINR(currentCalculatedRate);
+      document.getElementById("dashSolatiumAmount").textContent = formatINR(currentCalculatedRate);
+      document.getElementById("dashTotalPayout").textContent = formatINR(currentCalculatedRate * 2);
+
+      alert(`SYNCHRONIZED: The Terravalue valuation (${formatINR(currentCalculatedRate)}/ha) has been piped directly into the Citizen Dashboard LARR compensation engine.`);
+      addLedgerLog("LARR_PIPELINE", `Statutory 100% solatium payload pushed to citizen node: ${formatINR(currentCalculatedRate * 2)}/ha.`);
+    }
+
+    // Initial setup
+    document.getElementById("estimateBtn").addEventListener("click", runEstimate);
+    document.getElementById("landAreaInput").addEventListener("input", computeLandValue);
+
+    renderLocationChips();
+    renderLayerChips();
+    document.getElementById("locationInput").value = LOCATIONS[currentLocationId].full;
+    runEstimate();
+    addLedgerLog("SYS_INIT", "V.A.U.L.T. Cadastral Engine & Terravalue Oracle fully initialized.");
+  </script>
+</body>
+</html>
